@@ -10,6 +10,11 @@ import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.search.*;
 import org.apache.lucene.util.Version;
 
+import org.apache.lucene.search.highlight.Highlighter;
+import org.apache.lucene.search.highlight.InvalidTokenOffsetsException;
+import org.apache.lucene.search.highlight.QueryScorer;
+import org.apache.lucene.search.highlight.SimpleHTMLFormatter;
+
 import java.io.IOException;
 import java.util.*;
 
@@ -65,5 +70,30 @@ public class SearchUtils {
             }
         }
         return map;
+    }
+
+    public static Map<String, List<String>> highlight(List<String> fieldNames,
+                                                      Document doc, Query query,
+                                                      Analyzer analyzer,
+                                                      String spanName) throws IOException {
+        Map<String, List<String>> highlightedFields = new HashMap<String, List<String>>();
+        for (String fieldName : fieldNames) {
+            String content = doc.get(fieldName);
+            if (content != null) {
+                org.apache.lucene.search.highlight.Scorer qs = new QueryScorer(query);
+                SimpleHTMLFormatter formatter = new SimpleHTMLFormatter("<span class=\"" + spanName + "\">", "</span>");
+                Highlighter hl = new Highlighter(formatter, qs);
+                try {
+                    String[] fragments = hl.getBestFragments(analyzer, fieldName, content, 3);
+                    if (fragments.length > 0) {
+                        highlightedFields.put("highlighted-" + fieldName, Arrays.asList(fragments));
+                    }
+                } catch (InvalidTokenOffsetsException e) {
+                    throw new IOException(e);
+                }
+            }
+        }
+
+        return highlightedFields;
     }
 }
