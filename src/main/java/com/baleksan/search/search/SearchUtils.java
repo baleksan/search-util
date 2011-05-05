@@ -60,6 +60,31 @@ public class SearchUtils {
         }
     }
 
+    public static List<Integer> searchForDocIds(IndexReader reader, Query query, int maxResults)
+            throws IOException, ParseException {
+        List<Integer> docIds = new ArrayList<Integer>();
+        Searcher searcher = null;
+        try {
+            searcher = new IndexSearcher(reader);
+
+            TopDocs docs = searcher.search(query, null, maxResults);
+
+            for (ScoreDoc scoreDoc : docs.scoreDocs) {
+                docIds.add(scoreDoc.doc);
+            }
+
+            return docIds;
+        } finally {
+            if (searcher != null) {
+                try {
+                    searcher.close();
+                } catch (IOException e) {
+                    LOG.error(e.getMessage(), e);
+                }
+            }
+        }
+    }
+
     public static Map<String, List<String>> convert(Document doc) {
         Map<String, List<String>> map = new HashMap<String, List<String>>();
         if (doc != null) {
