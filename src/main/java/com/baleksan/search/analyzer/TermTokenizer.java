@@ -57,7 +57,7 @@ public class TermTokenizer {
             Reader docReader = new BufferedReader(new StringReader(content));
             TokenStream result = new StandardTokenizer(Version.LUCENE_30, docReader);
             while(result.incrementToken()) {
-                String token = result.getAttribute(TermAttribute.class).toString();
+                String token = result.getAttribute(TermAttribute.class).term();
                 tokens.add(toLowerCase  ? token.toLowerCase() : token);
             }
         } catch (IOException ex) {
