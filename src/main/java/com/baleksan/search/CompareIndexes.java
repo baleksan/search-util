@@ -36,7 +36,7 @@ public class CompareIndexes {
      * @throws IOException    problems accessing indexes
      * @throws ParseException problems parsing query
      */
-    public boolean compare(String indexDir1, String indexDir2, String keyFieldName) throws IOException, ParseException {
+    public CompareResult compare(String indexDir1, String indexDir2, String keyFieldName) throws IOException, ParseException {
         FSDirectory dir1 = FSDirectory.open(new File(indexDir1));
         IndexReader reader1 = IndexReader.open(dir1);
 
@@ -46,11 +46,8 @@ public class CompareIndexes {
         return compare(reader1, reader2, keyFieldName);
     }
 
-    protected boolean compare(IndexReader reader1, IndexReader reader2, String keyFieldName) throws IOException, ParseException {
-        if (reader1.numDocs() != reader2.numDocs()) {
-            return false;
-        }
-
+    protected CompareResult compare(IndexReader reader1, IndexReader reader2, String keyFieldName) throws IOException, ParseException {
+        CompareResult result = new CompareResult();
         for (int docId = 0; docId < reader1.numDocs(); docId++) {
             if (!reader1.isDeleted(docId)) {
                 Document doc1 = reader1.document(docId);
@@ -61,13 +58,33 @@ public class CompareIndexes {
                 }
 
                 Document doc2 = findByKey(reader2, keyField);
-                if (doc2 == null || !documentEquals(doc1, doc2)) {
-                    return false;
+                if (doc2 == null) {
+                    result.addRemoved(doc2);
+                } else {
+                    if (!documentEquals(doc1, doc2)) {
+                        result.addDiff(doc1, doc2);
+                    }
                 }
             }
         }
 
-        return true;
+        for (int docId = 0; docId < reader2.numDocs(); docId++) {
+            if (!reader2.isDeleted(docId)) {
+                Document doc2 = reader2.document(docId);
+                Field keyField = doc2.getField(keyFieldName);
+                if (keyField == null) {
+                    throw new IllegalArgumentException("Key field '" + keyFieldName
+                            + "' should be defined in all docs in the index");
+                }
+
+                Document doc1 = findByKey(reader1, keyField);
+                if (doc1 == null) {
+                    result.addAdded(doc2);
+                }
+            }
+        }
+
+        return result;
     }
 
     private boolean documentEquals(Document doc1, Document doc2) {
