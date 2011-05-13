@@ -87,16 +87,6 @@ public class Diff<F, D> {
 
     @Override
     public String toString() {
-        StringBuilder builder = new StringBuilder();
-
-        builder.append(name);
-        builder.append(": Added ");
-        builder.append(added.size());
-        builder.append(":, Removed ");
-        builder.append(removed.size());
-        builder.append(", Diffs ");
-        builder.append(diffs.size());
-
-        return builder.toString();
+        return describe();
     }
 }
