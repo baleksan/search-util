@@ -36,7 +36,8 @@ public class CompareIndexes {
      * @throws IOException    problems accessing indexes
      * @throws ParseException problems parsing query
      */
-    public CompareResult compare(String indexDir1, String indexDir2, String keyFieldName) throws IOException, ParseException {
+    public Diff<Document, Diff<Fieldable, DocumentDiff>> compare(String indexDir1, String indexDir2, String keyFieldName)
+            throws IOException, ParseException {
         FSDirectory dir1 = FSDirectory.open(new File(indexDir1));
         IndexReader reader1 = IndexReader.open(dir1);
 
@@ -46,8 +47,9 @@ public class CompareIndexes {
         return compare(reader1, reader2, keyFieldName);
     }
 
-    protected CompareResult compare(IndexReader reader1, IndexReader reader2, String keyFieldName) throws IOException, ParseException {
-        CompareResult result = new CompareResult();
+    protected Diff<Document, Diff<Fieldable, DocumentDiff>> compare(IndexReader reader1, IndexReader reader2, String keyFieldName)
+            throws IOException, ParseException {
+        Diff<Document, Diff<Fieldable, DocumentDiff>> result = new Diff<Document, Diff<Fieldable, DocumentDiff>>();
         for (int docId = 0; docId < reader1.numDocs(); docId++) {
             if (!reader1.isDeleted(docId)) {
                 Document doc1 = reader1.document(docId);
@@ -59,10 +61,11 @@ public class CompareIndexes {
 
                 Document doc2 = findByKey(reader2, keyField);
                 if (doc2 == null) {
-                    result.addRemoved(doc2);
+                    result.addAdded(doc1);
                 } else {
-                    if (!documentEquals(doc1, doc2)) {
-                        result.addDiff(doc1, doc2);
+                    Diff<Fieldable, DocumentDiff> diff = CompareUtils.diff(doc1, doc2);
+                    if (!diff.isEquals()) {
+                        result.addDiff(diff);
                     }
                 }
             }
@@ -79,27 +82,12 @@ public class CompareIndexes {
 
                 Document doc1 = findByKey(reader1, keyField);
                 if (doc1 == null) {
-                    result.addAdded(doc2);
+                    result.addRemoved(doc2);
                 }
             }
         }
 
         return result;
-    }
-
-    private boolean documentEquals(Document doc1, Document doc2) {
-        for (Fieldable field1 : doc1.getFields()) {
-            Fieldable field2 = doc2.getField(field1.name());
-            if (field2 == null) {
-                return false;
-            }
-
-            if (!field1.stringValue().equals(field2.stringValue())) {
-                return false;
-            }
-        }
-
-        return true;
     }
 
     private Document findByKey(IndexReader reader, Field keyField) throws ParseException, IOException {

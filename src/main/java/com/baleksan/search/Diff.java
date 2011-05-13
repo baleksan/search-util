@@ -1,7 +1,6 @@
 package com.baleksan.search;
 
 import com.baleksan.util.Util;
-import org.apache.lucene.document.Document;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,43 +8,43 @@ import java.util.List;
 /**
  * @author <a href="mailto:baleksan@yammer-inc.com" boris/>
  */
-public class CompareResult {
-    private String resultPrefix;
-    private List<Document> added;
-    private List<Document> removed;
-    private List<DocumentPair> diffs;
+public class Diff<F, D> {
+    private String name;
+    private List<F> added;
+    private List<F> removed;
+    private List<D> diffs;
 
-    public CompareResult() {
-        added = new ArrayList<Document>();
-        removed = new ArrayList<Document>();
-        diffs = new ArrayList<DocumentPair>();
+    public Diff() {
+        added = new ArrayList<F>();
+        removed = new ArrayList<F>();
+        diffs = new ArrayList<D>();
     }
 
-    public void setResultPrefix(String resultPrefix) {
-        this.resultPrefix = resultPrefix;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public void addAdded(Document doc) {
+    public void addAdded(F doc) {
         added.add(doc);
     }
 
-    public void addRemoved(Document doc) {
+    public void addRemoved(F doc) {
         removed.add(doc);
     }
 
-    public void addDiff(Document doc1, Document doc2, DocumentDiff diff) {
-        diffs.add(new DocumentPair(doc1, doc2, diff));
+    public void addDiff(D diff) {
+        diffs.add(diff);
     }
 
-    public List<Document> getAdded() {
+    public List<F> getAdded() {
         return added;
     }
 
-    public List<Document> getRemoved() {
+    public List<F> getRemoved() {
         return removed;
     }
 
-    public List<DocumentPair> getDiffs() {
+    public List<D> getDiffs() {
         return diffs;
     }
 
@@ -56,11 +55,11 @@ public class CompareResult {
     public String describe() {
         StringBuilder builder = new StringBuilder();
         builder.append("Compare results for ");
-        builder.append(resultPrefix);
+        builder.append(name);
         builder.append(Util.EOL);
 
         builder.append("Added {");
-        for (Document doc : added) {
+        for (F doc : added) {
             builder.append(doc.toString());
             builder.append(", ");
         }
@@ -68,7 +67,7 @@ public class CompareResult {
         builder.append(Util.EOL);
 
         builder.append("Removed {");
-        for (Document doc : removed) {
+        for (F doc : removed) {
             builder.append(doc.toString());
             builder.append(", ");
         }
@@ -76,7 +75,7 @@ public class CompareResult {
         builder.append(Util.EOL);
 
         builder.append("Diffs {");
-        for (DocumentPair diff : diffs) {
+        for (D diff : diffs) {
             builder.append(diff.toString());
             builder.append(", ");
         }
@@ -90,7 +89,7 @@ public class CompareResult {
     public String toString() {
         StringBuilder builder = new StringBuilder();
 
-        builder.append(resultPrefix);
+        builder.append(name);
         builder.append(": Added ");
         builder.append(added.size());
         builder.append(":, Removed ");
@@ -99,25 +98,5 @@ public class CompareResult {
         builder.append(diffs.size());
 
         return builder.toString();
-    }
-
-    public class DocumentPair {
-        Document doc1;
-        Document doc2;
-        DocumentDiff diff;
-
-        public DocumentPair(Document doc1, Document doc2, DocumentDiff diff) {
-            this.doc1 = doc1;
-            this.doc2 = doc2;
-            this.diff = diff;
-        }
-
-        public String toString() {
-            StringBuilder builder = new StringBuilder();
-
-            builder.append(diff.toString());
-
-            return builder.toString();
-        }
     }
 }
