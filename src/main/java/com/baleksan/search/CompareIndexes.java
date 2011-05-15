@@ -63,7 +63,7 @@ public class CompareIndexes {
                 if (doc2 == null) {
                     result.addAdded(doc1);
                 } else {
-                    Diff<Fieldable, DocumentDiff> diff = CompareUtils.diff(doc1, doc2);
+                    Diff<Fieldable, DocumentDiff> diff = CompareUtils.diff(keyField.stringValue(), doc1, doc2);
                     if (!diff.isEquals()) {
                         result.addDiff(diff);
                     }
