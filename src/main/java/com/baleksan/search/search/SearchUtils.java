@@ -111,7 +111,7 @@ public class SearchUtils {
                 try {
                     String[] fragments = hl.getBestFragments(analyzer, fieldName, content, 3);
                     if (fragments.length > 0) {
-                        highlightedFields.put("highlighted-" + fieldName, Arrays.asList(fragments));
+                        highlightedFields.put(fieldName, Arrays.asList(fragments));
                     }
                 } catch (InvalidTokenOffsetsException e) {
                     throw new IOException(e);
